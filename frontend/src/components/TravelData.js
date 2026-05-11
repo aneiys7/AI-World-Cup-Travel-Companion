@@ -27,7 +27,7 @@ export default function TravelData({ onBack, onNext }) {
       setHotels(h.hotels || []);
       setRestaurants(r.places || []);
       setAttractions(a.places || []);
-    } catch(e) { console.error(e); }
+   } catch(e) { console.error(e); setHotels([]); setRestaurants([]); setAttractions([]); }
     finally { setLoading(false); }
   }
 
