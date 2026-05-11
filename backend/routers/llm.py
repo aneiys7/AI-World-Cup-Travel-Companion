@@ -13,6 +13,10 @@ logger = logging.getLogger("uvicorn")
 
 router = APIRouter()
 
+@router.get("/test")
+async def test():
+    return {"groq_key_set": bool(GROQ_API_KEY), "key_preview": GROQ_API_KEY[:8] if GROQ_API_KEY else "MISSING"}
+
 def get_groq_config():
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
