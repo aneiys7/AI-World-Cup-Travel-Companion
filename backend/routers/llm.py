@@ -7,6 +7,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+# Load variables from .env file
+load_dotenv()
+
+# Define the variable that Pylance is looking for
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
 # Initialize environment and logger
 load_dotenv()
 logger = logging.getLogger("uvicorn")
