@@ -23,7 +23,7 @@ def get_groq_config():
         logger.error("DEPLOYMENT ERROR: GROQ_API_KEY is missing from environment variables!")
     return api_key
 
-GROQ_URL = "[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)"
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 async def groq_chat(messages: list, max_tokens: int = 1500) -> str:
