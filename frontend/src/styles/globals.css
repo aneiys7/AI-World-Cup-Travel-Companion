@@ -1,39 +1,177 @@
+/* globals.css — FIFA World Cup 2026 — Unified Single Theme
+   ONE accent color: #C8102E (WC Red) for ALL buttons, interactions, borders
+   Drop into: frontend/src/styles/globals.css
+*/
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@700;900&display=swap');
 
 :root {
-  --font-inter: 'Inter', system-ui, sans-serif;
+  /* FIFA World Cup 2026 — SINGLE UNIFIED PALETTE */
+  --red:        #C8102E;   /* Primary action: ALL buttons, links, accents */
+  --red-dark:   #a00d23;   /* Hover state */
+  --red-light:  #fef2f2;   /* Light red tint backgrounds */
+  --red-border: rgba(200,16,46,0.25);
+
+  --black:      #0d0d0d;   /* Header, footer, dark sections */
+  --black-2:    #1a1a1a;
+  --white:      #ffffff;
+  --off-white:  #f2f2f2;   /* Page background */
+
+  --text-dark:  #1a1a1a;
+  --text-mid:   #555555;
+  --text-light: #999999;
+
+  --border:     #e5e5e5;
+  --card-bg:    #ffffff;
+  --card-shadow: 0 1px 6px rgba(0,0,0,0.07);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
 body {
-  background: #0a0f0a;
-  color: #f0fdf4;
-  font-family: var(--font-inter);
-  min-height: 100vh;
+  background: var(--off-white);
+  color: var(--text-dark);
+  font-family: 'Barlow', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #111; }
-::-webkit-scrollbar-thumb { background: #2d4a2d; border-radius: 3px; }
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #f0f0f0; }
+::-webkit-scrollbar-thumb { background: var(--red); border-radius: 4px; }
 
-/* Smooth transitions */
-* { transition-property: background-color, border-color, opacity;
-    transition-duration: 150ms; }
+/* ── BUTTON SYSTEM — all red, all consistent ── */
 
-/* Custom pitch-green glow */
-.glow-green {
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+/* Primary: solid red */
+.btn-primary,
+button.btn-primary {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 11px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary:hover:not(:disabled) { background: var(--red-dark); transform: translateY(-1px); }
+.btn-primary:disabled              { background: #e0e0e0; color: #aaa; cursor: not-allowed; transform: none; }
+
+/* Secondary: outlined red */
+.btn-secondary {
+  background: white;
+  color: var(--red);
+  border: 1.5px solid var(--red);
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-secondary:hover { background: var(--red); color: white; }
+
+/* Ghost: subtle */
+.btn-ghost {
+  background: none;
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-family: 'Barlow', Arial, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-ghost:hover { color: var(--red); border-color: var(--red); }
+
+/* ── CARD ── */
+.wc-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  padding: 24px;
+  margin-bottom: 20px;
 }
 
-.card-hover:hover {
-  transform: translateY(-2px);
-  transition: transform 200ms ease;
+/* ── INPUT ── */
+.wc-input,
+input[type="text"].wc-input,
+textarea.wc-input {
+  background: #fafafa;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: 'Barlow', Arial, sans-serif;
+  color: var(--text-dark);
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.wc-input:focus { border-color: var(--red); }
+.wc-input::placeholder { color: #bbb; }
+
+/* ── LABEL ── */
+.wc-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Barlow Condensed', sans-serif;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+
+/* ── TYPOGRAPHY ── */
+.wc-title {
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--black);
+}
+
+/* ── LOADING SHIMMER ── */
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ── APP ENTER ANIMATION ── */
+.app-enter { animation: app-fadein 0.3s ease; }
+@keyframes app-fadein {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── MATCH CARD SELECTED STATE ── */
+.match-selected {
+  border: 2px solid var(--red) !important;
+  box-shadow: 0 4px 16px rgba(200,16,46,0.15) !important;
 }

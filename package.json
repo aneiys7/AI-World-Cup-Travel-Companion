@@ -1,0 +1,13 @@
+{
+  "_comment": "Add these scripts to your ROOT package.json (the one at project root, NOT inside frontend/). If you don't have a root package.json, create one with just this content.",
+  "name": "wc2026-trip-planner",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node scripts/dev.js",
+    "dev":   "node scripts/dev.js"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

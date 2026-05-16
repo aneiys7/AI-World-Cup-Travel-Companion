@@ -13,8 +13,7 @@ load_dotenv()
 # Define the variable that Pylance is looking for
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Initialize environment and logger
-load_dotenv()
+# Initialize logger
 logger = logging.getLogger("uvicorn")
 
 router = APIRouter()
@@ -134,7 +133,7 @@ async def generate_itinerary(req: ItineraryRequest):
 async def chat(req: ChatRequest):
     api_key = get_groq_config()
     if not api_key:
-        return {"reply": "AI Chat is offline.", "history": req.history}
+        return {"reply": "AI Chat is offline."}
 
     messages = [
         {"role": "system", "content": "You are a FIFA World Cup 2026 travel assistant."},
@@ -143,11 +142,7 @@ async def chat(req: ChatRequest):
     ]
     
     reply = await groq_chat(messages, max_tokens=600)
-    new_history = [m.model_dump() for m in req.history] + [
-        {"role": "user", "content": req.message},
-        {"role": "assistant", "content": reply if reply else "Error."}
-    ]
-    return {"reply": reply if reply else "Error.", "history": new_history}
+    return {"reply": reply if reply else "Error processing request."}
 
 def _mock_intent():
     return {"origin_city": "London", "budget_usd": 3000, "interests": ["football"], "group_size": 2}

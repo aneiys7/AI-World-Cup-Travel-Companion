@@ -1,173 +1,201 @@
+// MatchCard.js — White card, WC 2026 professional theme
+// Drop into: frontend/src/components/MatchCard.js
+
 import { useState } from "react";
 import { fetchTickets } from "../lib/api";
 import { useTripStore } from "../store/tripStore";
 import toast from "react-hot-toast";
 
-const FLAG_MAP = {
-  USA:     "🇺🇸",
-  Mexico:  "🇲🇽",
-  Canada:  "🇨🇦",
-  Brazil:  "🇧🇷",
-  Argentina: "🇦🇷",
-  England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-  France:  "🇫🇷",
-  Germany: "🇩🇪",
-  Spain:   "🇪🇸",
-  Portugal:"🇵🇹",
-  TBD:     "🏳️",
+const HOST_FLAG = { USA: "🇺🇸", Mexico: "🇲🇽", Canada: "🇨🇦" };
+
+const KO_BADGE = {
+  "Final":         { bg: "#7c3aed", color: "#fff" },
+  "Semi Final":    { bg: "#b45309", color: "#fff" },
+  "Third Place":   { bg: "#c2410c", color: "#fff" },
+  "Quarter Final": { bg: "#1d4ed8", color: "#fff" },
+  "Round of 16":   { bg: "#0f766e", color: "#fff" },
+  "Round of 32":   { bg: "#374151", color: "#fff" },
 };
 
-const COUNTRY_FLAG = { USA: "🇺🇸", Mexico: "🇲🇽", Canada: "🇨🇦" };
-
-function teamFlag(name) {
-  return FLAG_MAP[name] || "🏳️";
-}
+const GROUP_COLORS = {
+  "Group A": "#C8102E", "Group B": "#C8102E", "Group C": "#C8102E",
+  "Group D": "#C8102E", "Group E": "#C8102E", "Group F": "#C8102E",
+  "Group G": "#C8102E", "Group H": "#C8102E", "Group I": "#C8102E",
+  "Group J": "#C8102E", "Group K": "#C8102E", "Group L": "#C8102E",
+};
 
 export default function MatchCard({ match }) {
-  const [tickets, setTickets]   = useState(null);
-  const [loading, setLoading]   = useState(false);
+  const [tickets,  setTickets]  = useState(null);
+  const [tLoading, setTLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   const { selectedMatches, selectMatch, removeMatch, setTickets: storeTickets } = useTripStore();
-  const isSelected = selectedMatches.some((m) => m.match_id === match.match_id);
+  const isSelected = selectedMatches.some(m => m.match_id === match.match_id);
+  const koBadge    = KO_BADGE[match.stage];
 
-  const stageColor = {
-    Final:     "bg-yellow-500/20 text-yellow-300 border-yellow-500/40",
-    Semifinal: "bg-purple-500/20 text-purple-300 border-purple-500/40",
-  };
-  const stageBadge =
-    stageColor[match.stage] ||
-    "bg-green-900/40 text-green-400 border-green-700/40";
-
-  async function handleViewTickets() {
-    if (tickets) { setExpanded(!expanded); return; }
-    setLoading(true);
+  async function handleTickets() {
+    if (tickets) { setExpanded(e => !e); return; }
+    setTLoading(true);
     try {
       const data = await fetchTickets(match);
       setTickets(data);
       storeTickets(match.match_id, data);
       setExpanded(true);
-    } catch {
-      toast.error("Could not load ticket info");
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error("Could not load ticket info"); }
+    finally { setTLoading(false); }
   }
 
   function handleSelect() {
     if (isSelected) {
       removeMatch(match.match_id);
-      toast("Match removed from your trip", { icon: "🗑️" });
+      toast("Removed from trip", { icon: "🗑️" });
     } else {
-      if (selectedMatches.length >= 5) {
-        toast.error("You can only select up to 5 matches");
-        return;
-      }
       selectMatch(match);
-      toast.success("Match added to your trip!");
+      toast.success("Added to your trip!");
     }
   }
 
-  const lowestPrice = tickets?.tickets?.[0]?.price_ranges?.[0]?.min;
+  const fmt = d => new Date(d + "T12:00:00").toLocaleDateString("en-US", {
+    weekday: "short", month: "short", day: "numeric",
+  });
 
   return (
-    <div
-      className={`rounded-xl border transition-all duration-200 card-hover overflow-hidden
-        ${isSelected
-          ? "border-green-500 bg-green-950/60 glow-green"
-          : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8"
-        }`}
-    >
-      {/* Top section */}
-      <div className="p-4">
+    <div style={{
+      background: "white",
+      border: isSelected ? "2px solid #C8102E" : "1px solid #e5e5e5",
+      borderTop: `3px solid ${isSelected ? "#C8102E" : "#C8102E"}`,
+      borderRadius: 10,
+      overflow: "hidden",
+      transition: "all 0.2s",
+      boxShadow: isSelected
+        ? "0 0 0 1px #C8102E22, 0 6px 20px rgba(200,16,46,0.15)"
+        : "0 2px 8px rgba(0,0,0,0.07)",
+      transform: isSelected ? "translateY(-2px)" : "none",
+    }}>
+      <div style={{ padding: "12px 14px" }}>
+
         {/* Stage + Date row */}
-        <div className="flex items-center justify-between mb-3">
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${stageBadge}`}>
-            {match.stage}
-          </span>
-          <span className="text-xs text-white/50">
-            {new Date(match.date + "T12:00:00").toLocaleDateString("en-US", {
-              weekday: "short", month: "short", day: "numeric",
-            })} · {match.time}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          {koBadge ? (
+            <span style={{
+              fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 12,
+              background: koBadge.bg, color: koBadge.color,
+              textTransform: "uppercase", letterSpacing: 1,
+              fontFamily: "'Barlow Condensed', sans-serif",
+            }}>{match.stage}</span>
+          ) : (
+            <span style={{
+              fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 12,
+              background: "#fff0f2", color: "#C8102E",
+              border: "1px solid #fca5a5",
+              textTransform: "uppercase", letterSpacing: 1,
+              fontFamily: "'Barlow Condensed', sans-serif",
+            }}>{match.stage}</span>
+          )}
+          <span style={{ fontSize: 9, color: "#999", fontFamily: "'Barlow', Arial, sans-serif" }}>
+            {fmt(match.date)} · {match.time}
           </span>
         </div>
 
         {/* Teams */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-center flex-1">
-            <div className="text-2xl mb-1">{teamFlag(match.team_a)}</div>
-            <div className="text-sm font-semibold text-white">{match.team_a}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <div style={{ fontSize: 28, lineHeight: 1 }}>{match.flag_a || "🏳️"}</div>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: "#1a1a1a",
+              marginTop: 5, lineHeight: 1.2,
+              fontFamily: "'Barlow Condensed', sans-serif",
+              textTransform: "uppercase", letterSpacing: 0.5,
+            }}>{match.team_a}</div>
           </div>
-          <div className="text-white/30 font-bold text-lg px-3">VS</div>
-          <div className="text-center flex-1">
-            <div className="text-2xl mb-1">{teamFlag(match.team_b)}</div>
-            <div className="text-sm font-semibold text-white">{match.team_b}</div>
+          <div style={{
+            padding: "5px 10px",
+            background: "#f5f5f5", borderRadius: 6,
+            border: "1px solid #e5e5e5",
+          }}>
+            <span style={{
+              fontSize: 10, fontWeight: 900, color: "#999",
+              letterSpacing: 2, fontFamily: "'Barlow Condensed', sans-serif",
+            }}>VS</span>
+          </div>
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <div style={{ fontSize: 28, lineHeight: 1 }}>{match.flag_b || "🏳️"}</div>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: "#1a1a1a",
+              marginTop: 5, lineHeight: 1.2,
+              fontFamily: "'Barlow Condensed', sans-serif",
+              textTransform: "uppercase", letterSpacing: 0.5,
+            }}>{match.team_b}</div>
           </div>
         </div>
 
-        {/* Venue info */}
-        <div className="text-xs text-white/50 space-y-1 mb-4">
-          <div className="flex items-center gap-1.5">
-            <span>🏟️</span>
-            <span>{match.stadium}</span>
+        {/* Venue */}
+        <div style={{
+          background: "#f8f8f8", borderRadius: 8,
+          padding: "7px 10px", marginBottom: 10,
+          border: "1px solid #efefef",
+        }}>
+          <div style={{ fontSize: 9, color: "#888", marginBottom: 2, fontFamily: "'Barlow', Arial, sans-serif" }}>
+            🏟️ {match.stadium}
           </div>
-          <div className="flex items-center gap-1.5">
-            <span>{COUNTRY_FLAG[match.country] || "📍"}</span>
-            <span>{match.city}, {match.country}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span>👥</span>
-            <span>{match.capacity.toLocaleString()} capacity</span>
+          <div style={{ fontSize: 9, color: "#aaa", fontFamily: "'Barlow', Arial, sans-serif" }}>
+            {HOST_FLAG[match.country] || "📍"} {match.city} · {match.country}
+            {match.capacity && ` · ${match.capacity.toLocaleString()} cap`}
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={handleSelect}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all
-              ${isSelected
-                ? "bg-green-600 text-white hover:bg-red-600"
-                : "bg-green-900/50 text-green-400 border border-green-700/50 hover:bg-green-800/60"
-              }`}
-          >
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 7 }}>
+          <button onClick={handleSelect} style={{
+            flex: 1, padding: "8px 0", borderRadius: 8,
+            fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
+            background: isSelected ? "#C8102E" : "white",
+            color: isSelected ? "#fff" : "#C8102E",
+            border: isSelected ? "none" : "1.5px solid #C8102E",
+            fontFamily: "'Barlow Condensed', sans-serif",
+            letterSpacing: 0.5,
+          }}>
             {isSelected ? "✓ Added — Remove" : "+ Add to Trip"}
           </button>
-
-          <button
-            onClick={handleViewTickets}
-            disabled={loading}
-            className="py-2 px-3 rounded-lg text-sm font-medium border border-white/10 text-white/60 hover:bg-white/10 transition-all"
-          >
-            {loading ? "..." : expanded ? "Hide" : lowestPrice ? `From $${lowestPrice}` : "Tickets"}
+          <button onClick={handleTickets} disabled={tLoading} style={{
+            padding: "8px 12px", borderRadius: 8, fontSize: 12,
+            cursor: "pointer", transition: "all 0.15s",
+            background: "white", color: "#C8102E",
+            border: "1.5px solid #C8102E",
+          }}>
+            {tLoading ? "…" : expanded ? "▲" : "🎟"}
           </button>
         </div>
       </div>
 
-      {/* Expanded ticket info */}
+      {/* Tickets panel */}
       {expanded && tickets && (
-        <div className="border-t border-white/10 bg-black/30 p-4">
+        <div style={{
+          borderTop: "1px solid #e5e5e5",
+          background: "#fafafa", padding: "10px 14px",
+        }}>
           {tickets.source === "mock_demo" && (
-            <p className="text-xs text-yellow-400/70 mb-3 flex items-center gap-1">
-              ⚠️ Demo data — add TICKETMASTER_API_KEY for live prices
+            <p style={{ fontSize: 9, color: "#C8102E", marginBottom: 6, opacity: 0.7, fontFamily: "'Barlow', Arial, sans-serif" }}>
+              ⚠️ Estimated prices — add TICKETMASTER_API_KEY for live data
             </p>
           )}
-          <div className="space-y-2">
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             {tickets.tickets?.[0]?.price_ranges?.map((tier, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <span className="text-xs text-white/50 capitalize">{tier.type}</span>
-                <span className="text-sm font-medium text-white">
-                  ${tier.min.toLocaleString()} – ${tier.max.toLocaleString()} {tier.currency}
+              <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 9, color: "#888", fontFamily: "'Barlow', Arial, sans-serif" }}>{tier.type}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#C8102E", fontFamily: "'Barlow Condensed', sans-serif" }}>
+                  ${tier.min.toLocaleString()} – ${tier.max.toLocaleString()}
                 </span>
               </div>
             ))}
           </div>
-          <a
-            href={tickets.tickets?.[0]?.url || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 block text-center text-xs text-green-400 hover:text-green-300 underline"
-          >
+          <a href={tickets.tickets?.[0]?.url || "https://www.ticketmaster.com"}
+            target="_blank" rel="noreferrer"
+            style={{
+              display: "block", textAlign: "center",
+              marginTop: 8, fontSize: 9, color: "#C8102E",
+              textDecoration: "underline", fontFamily: "'Barlow', Arial, sans-serif",
+            }}>
             View on Ticketmaster →
           </a>
         </div>

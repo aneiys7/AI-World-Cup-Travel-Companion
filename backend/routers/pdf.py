@@ -13,30 +13,32 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 router = APIRouter()
 
 class PDFRequest(BaseModel):
-    itinerary:  str
-    user_name:  str  = "World Cup Fan"
-    matches:    list = []
+    itinerary:       str
+    user_name:       str  = "World Cup Fan"
+    matches:         list = []
+    chat_transcript: str  = None  
 
 @router.post("/export")
 def export_pdf(req: PDFRequest):
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=22*mm, rightMargin=22*mm, topMargin=20*mm, bottomMargin=20*mm)
 
-    GREEN = colors.HexColor("#1a6b3a")
+    # --- UNIFIED BRAND COLORS (Swapped to World Cup Red) ---
+    RED   = colors.HexColor("#C8102E")
     GRAY  = colors.HexColor("#555555")
     BLACK = colors.HexColor("#111111")
 
-    title_s = ParagraphStyle("T",  fontName="Helvetica-Bold", fontSize=18,  textColor=GREEN,  alignment=TA_CENTER, spaceAfter=4)
-    sub_s   = ParagraphStyle("S",  fontName="Helvetica",      fontSize=9,   textColor=GRAY,   alignment=TA_CENTER, spaceAfter=2)
-    body_s  = ParagraphStyle("B",  fontName="Helvetica",      fontSize=9.5, textColor=BLACK,  leading=15, spaceAfter=4, alignment=TA_JUSTIFY)
-    h1_s    = ParagraphStyle("H1", fontName="Helvetica-Bold", fontSize=14,  textColor=GREEN,  spaceBefore=14, spaceAfter=4)
-    h2_s    = ParagraphStyle("H2", fontName="Helvetica-Bold", fontSize=12,  textColor=GREEN,  spaceBefore=10, spaceAfter=3)
-    h3_s    = ParagraphStyle("H3", fontName="Helvetica-Bold", fontSize=10,  textColor=BLACK,  spaceBefore=6,  spaceAfter=2)
-    match_s = ParagraphStyle("M",  fontName="Helvetica-Bold", fontSize=9,   textColor=GREEN,  spaceAfter=2)
-    foot_s  = ParagraphStyle("F",  fontName="Helvetica",      fontSize=7.5, textColor=GRAY,   alignment=TA_CENTER)
+    title_s = ParagraphStyle("T",  fontName="Helvetica-Bold", fontSize=18,  textColor=RED,   alignment=TA_CENTER, spaceAfter=4)
+    sub_s   = ParagraphStyle("S",  fontName="Helvetica",      fontSize=9,   textColor=GRAY,  alignment=TA_CENTER, spaceAfter=2)
+    body_s  = ParagraphStyle("B",  fontName="Helvetica",      fontSize=9.5, textColor=BLACK, leading=15, spaceAfter=4, alignment=TA_JUSTIFY)
+    h1_s    = ParagraphStyle("H1", fontName="Helvetica-Bold", fontSize=14,  textColor=RED,   spaceBefore=14, spaceAfter=4)
+    h2_s    = ParagraphStyle("H2", fontName="Helvetica-Bold", fontSize=12,  textColor=RED,   spaceBefore=10, spaceAfter=3)
+    h3_s    = ParagraphStyle("H3", fontName="Helvetica-Bold", fontSize=10,  textColor=BLACK, spaceBefore=6,  spaceAfter=2)
+    match_s = ParagraphStyle("M",  fontName="Helvetica-Bold", fontSize=10,  textColor=RED,   spaceAfter=2)
+    foot_s  = ParagraphStyle("F",  fontName="Helvetica",      fontSize=7.5, textColor=GRAY,  alignment=TA_CENTER)
 
     def hr():
-        return HRFlowable(width="100%", thickness=0.4, color=colors.HexColor("#cccccc"), spaceAfter=6, spaceBefore=4)
+        return HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#cccccc"), spaceAfter=6, spaceBefore=4)
 
     story = [
         Paragraph("⚽ World Cup 2026 Travel Itinerary", title_s),
@@ -45,43 +47,68 @@ def export_pdf(req: PDFRequest):
         Spacer(1, 4),
     ]
 
+    # 1. Render Matches Header & List
     if req.matches:
         story.append(Paragraph("Selected Matches:", match_s))
         for m in req.matches:
+            # Safely extract match data matching your store structure
+            team_a = m.get('team_a') or m.get('home_team') or 'TBD'
+            team_b = m.get('team_b') or m.get('away_team') or 'TBD'
+            date = m.get('date') or ''
+            stadium = m.get('stadium') or ''
+            city = m.get('city') or 'Host City'
+            
             story.append(Paragraph(
-                f"• {m.get('team_a','TBD')} vs {m.get('team_b','TBD')} - {m.get('date','')} | {m.get('stadium','')}, {m.get('city','')}",
+                f"• <b>{team_a} vs {team_b}</b> - {date} | {stadium}, {city}",
                 body_s))
         story += [Spacer(1, 8), hr()]
 
+    # Helper function to cleanly process and map markdown blocks to ReportLab elements
+    def parse_text_to_story(text_block):
+        if not text_block:
+            return
+            
+        for line in text_block.split("\n"):
+            line = line.strip()
+
+            if not line:
+                story.append(Spacer(1, 4))
+                continue
+
+            if line.startswith("### "):
+                clean = line[4:].replace("**", "").strip()
+                story.append(Paragraph(clean, h3_s))
+
+            elif line.startswith("## "):
+                clean = line[3:].replace("**", "").strip()
+                story.append(Paragraph(clean, h2_s))
+
+            elif line.startswith("# "):
+                clean = line[2:].replace("**", "").strip()
+                story.append(Paragraph(clean, h1_s))
+
+            elif line.startswith("* ") or line.startswith("- "):
+                # Convert Markdown bold syntax to HTML tags safely
+                clean_bold = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line[2:].strip())
+                clean = "• " + clean_bold
+                story.append(Paragraph(clean, body_s))
+
+            else:
+                # FIX: Removed the broken ghost macro line entirely and kept clean chaining
+                clean = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
+                story.append(Paragraph(clean, body_s))
+
+    # 2. Render Main Itinerary Content
     story.append(Paragraph("Your AI-Generated Itinerary:", match_s))
     story.append(Spacer(1, 4))
+    parse_text_to_story(req.itinerary)
 
-    for line in req.itinerary.split("\n"):
-        line = line.strip()
-
-        if not line:
-            story.append(Spacer(1, 4))
-            continue
-
-        if line.startswith("### "):
-            clean = line[4:].replace("**", "").strip()
-            story.append(Paragraph(clean, h3_s))
-
-        elif line.startswith("## "):
-            clean = line[3:].replace("**", "").strip()
-            story.append(Paragraph(clean, h2_s))
-
-        elif line.startswith("# "):
-            clean = line[2:].replace("**", "").strip()
-            story.append(Paragraph(clean, h1_s))
-
-        elif line.startswith("* ") or line.startswith("- "):
-            clean = "• " + re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line[2:].strip())
-            story.append(Paragraph(clean, body_s))
-
-        else:
-            clean = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', line)
-            story.append(Paragraph(clean, body_s))
+    # 3. Append Chat Refinements dynamically if they exist
+    if req.chat_transcript:
+        story += [Spacer(1, 10), hr(), Spacer(1, 4)]
+        story.append(Paragraph("Trip Refinements & AI Chat Log:", match_s))
+        story.append(Spacer(1, 4))
+        parse_text_to_story(req.chat_transcript)
 
     story += [
         Spacer(1, 16),
